@@ -31,9 +31,9 @@ jobs:
           distribution: "temurin"
           cache: maven
 
-      # ✅ Add this step to make mvnw executable
-      - name: Make Maven Wrapper Executable
-        run: chmod +x ./${{ env.SERVICE_NAME }}/mvnw
+      # ✅ FIX: make ALL mvnw executable FIRST
+      - name: Fix mvnw permissions
+        run: chmod +x */mvnw
 
       - name: Build and Install Common Library
         working-directory: ./common-library
