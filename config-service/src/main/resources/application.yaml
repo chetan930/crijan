@@ -21,10 +21,7 @@ management:
       enabled: false
 #  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
 
-
-
 ---
-
 spring:
   config:
     activate:
