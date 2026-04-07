@@ -31,6 +31,10 @@ jobs:
           distribution: "temurin"
           cache: maven
 
+        # ✅ Add this step to make mvnw executable
+      - name: Make Maven Wrapper Executable
+        run: chmod +x ./${{ env.SERVICE_NAME }}/mvnw
+
       - name: Build and Push Docker Image with Jib
         working-directory: ./${{ env.SERVICE_NAME }}
         run: |
