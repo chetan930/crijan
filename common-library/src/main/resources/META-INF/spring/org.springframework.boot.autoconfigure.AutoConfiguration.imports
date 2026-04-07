@@ -1,0 +1,2 @@
+com.crijan.common_library.security.SharedSecurityAutoConfiguration
+com.crijan.common_library.error.SharedExceptionAutoConfiguration

@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: config-service
+
+  cloud:
+    config.server.git:
+      uri: https://github.com/chetan930/crijan-config-server
+      username: chetan930
+      password: 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
+      default-label: main
+
+server.port: 8888
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  health:
+    config:
+      enabled: false
+#  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
+
+
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: k8s
+
+  cloud:
+    discovery:
+      enabled: false
+    config.server.git:
+      uri: https://github.com/chetan930/crijan-config-server
+      username: ${GIT_USERNAME}
+      password: ${GIT_PASSWORD}
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
