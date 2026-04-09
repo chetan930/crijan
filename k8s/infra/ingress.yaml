@@ -4,47 +4,30 @@ metadata:
   name: crijan-main-ingress
   namespace: crijan-core
   annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
 spec:
   ingressClassName: "nginx"
+  tls:
+    - hosts:
+        - "crijan.in"
+        - "www.crijan.in"
+        - "api.crijan.in"
+        - "*.previews.crijan.in"
+      secretName: crijan-tls-secret
   rules:
-    # 1. Main Website Route (The Frontend!)
     - host: "crijan.in"
-      http:
+      http: &http_rules
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
                 name: crijan-frontend
-                port:
-                  number: 80
-
+                port: { number: 80 }
     - host: "www.crijan.in"
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: crijan-frontend
-                port:
-                  number: 80
-
-    # 2. Previews Route
-    - host: "*.previews.crijan.in"
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: crijan-me-proxy
-                port:
-                  number: 80
-
-    # 3. API Gateway Route
+      http: *http_rules
     - host: "api.crijan.in"
       http:
         paths:
@@ -53,5 +36,13 @@ spec:
             backend:
               service:
                 name: api-gateway
-                port:
-                  number: 80
+                port: { number: 80 }
+    - host: "*.previews.crijan.in"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: crijan-me-proxy
+                port: { number: 80 }

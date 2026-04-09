@@ -1,0 +1,74 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "crijan-frontend/**" # UPDATE THIS: Match the actual name of your frontend folder
+
+env:
+  SERVICE_NAME: crijan-frontend
+  IMAGE_NAME: chetan930/crijan-frontend
+
+permissions:
+  id-token: write # Required for GCP Workload Identity
+  contents: read
+
+jobs:
+  build-and-deploy:
+    name: Build, Push, and Deploy to GKE
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 1. Setup Docker to allow building linux/amd64 images
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 2. Login to DockerHub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 3. Build and Push the Docker Image
+      - name: Build and Push Frontend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./crijan-frontend # UPDATE THIS: Path to where your Dockerfile is located
+          platforms: linux/amd64
+          push: true
+          # We tag it with both the specific Git commit hash (for tracking) and 'latest'
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.IMAGE_NAME }}:latest
+
+      # 4. Authenticate to Google Cloud
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: "${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}"
+          service_account: "${{ secrets.GCP_SERVICE_ACCOUNT }}"
+
+      # 5. Get GKE Credentials
+      - name: Get GKE Credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ secrets.GCP_CLUSTER }}
+          location: ${{ secrets.GCP_ZONE }}
+
+      # 6. Deploy the exact new version to GKE
+      - name: Deploy to GKE
+        run: |
+          kubectl set image deployment/${{ env.SERVICE_NAME }} \
+          ${{ env.SERVICE_NAME }}=${{ env.IMAGE_NAME }}:${{ github.sha }} \
+          -n crijan-core
+
+          kubectl rollout status deployment/${{ env.SERVICE_NAME }} -n crijan-core

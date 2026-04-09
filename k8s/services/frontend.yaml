@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crijan-frontend
+  namespace: crijan-core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: crijan-frontend
+  template:
+    metadata:
+      labels:
+        app: crijan-frontend
+    spec:
+      containers:
+        - name: crijan-frontend
+          image: chetan930/crijan-frontend@sha256:167de8e85fe327ab286277448bc6dd084fc103f7f1b4bca54a369ba46a5ebe2f
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: crijan-frontend
+  namespace: crijan-core
+spec:
+  type: ClusterIP
+  selector:
+    app: crijan-frontend
+  ports:
+    - port: 80
+      targetPort: 80

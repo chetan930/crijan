@@ -1,0 +1,16 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: crijan-wildcard-cert
+  namespace: crijan-core
+spec:
+  secretName: crijan-tls-secret
+  issuerRef:
+    name: letsencrypt-dns-prod
+    kind: ClusterIssuer
+  commonName: "crijan.in"
+  dnsNames:
+    - "crijan.in"
+    - "www.crijan.in"
+    - "api.crijan.in"
+    - "*.previews.crijan.in"
