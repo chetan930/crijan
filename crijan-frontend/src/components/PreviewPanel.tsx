@@ -41,7 +41,8 @@ export function PreviewPanel({
 
     try {
       const response = await api.deploy(projectId);
-      setPreviewUrl(response.previewUrl);
+      const updatedUrl = response.previewUrl.replace("http://", "https://");
+      setPreviewUrl(updatedUrl);
       toast({
         title: "Deployment successful",
         description: "Your preview is now ready",
