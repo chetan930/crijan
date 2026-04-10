@@ -17,7 +17,9 @@ public class CorsConfig {
         CorsConfiguration corsConfig = new CorsConfiguration();
         corsConfig.setAllowedOrigins(Arrays.asList(
                 "http://crijan.in",
+                "https://crijan.in",
                 "http://www.crijan.in",
+                "https://www.crijan.in",
                 "http://localhost:5173"
         ));
         corsConfig.setMaxAge(3600L);
