@@ -171,7 +171,7 @@ export const api = {
       },
     );
 
-    const data = await response.json();
+    // const data = await response.json();
 
     if (!response.ok) {
       console.error(
@@ -180,7 +180,8 @@ export const api = {
       throw new Error("Failed to fetch file content");
     }
 
-    return data.content;
+    // return data.content;
+    return response.text();
   },
 
   async deploy(projectId: string): Promise<DeployResponse> {
@@ -445,3 +446,5 @@ export const api = {
     return () => controller.abort();
   },
 };
+
+export type { FileNode };
