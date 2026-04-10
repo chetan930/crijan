@@ -4,7 +4,10 @@ import { Button } from "@/components/ui/button";
 import { api, PREVIEW_URL_KEY } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
-import { RuntimeErrorAlert, RuntimeError } from "@/components/RuntimeErrorAlert";
+import {
+  RuntimeErrorAlert,
+  RuntimeError,
+} from "@/components/RuntimeErrorAlert";
 
 interface PreviewPanelProps {
   projectId: string;
@@ -13,7 +16,12 @@ interface PreviewPanelProps {
   onFix: (error: RuntimeError) => void;
 }
 
-export function PreviewPanel({ projectId, runtimeError, onDismiss, onFix }: PreviewPanelProps) {
+export function PreviewPanel({
+  projectId,
+  runtimeError,
+  onDismiss,
+  onFix,
+}: PreviewPanelProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(() => {
     // Load from localStorage on mount
     return localStorage.getItem(PREVIEW_URL_KEY);
@@ -41,7 +49,8 @@ export function PreviewPanel({ projectId, runtimeError, onDismiss, onFix }: Prev
     } catch (error) {
       toast({
         title: "Deployment failed",
-        description: error instanceof Error ? error.message : "Something went wrong",
+        description:
+          error instanceof Error ? error.message : "Something went wrong",
         variant: "destructive",
       });
     } finally {
