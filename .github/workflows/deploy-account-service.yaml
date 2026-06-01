@@ -61,8 +61,14 @@ jobs:
       # ✅ Deploy directly to your new server
       - name: Deploy to K3s
         run: |
+          # 1. Apply your base Kubernetes files (creates it if it doesn't exist)
+          # IMPORTANT: Update "k8s/" below if your files are in a specific subfolder
+          kubectl apply -f k8s/ -n crijan-core
+
+          # 2. Inject the brand new Docker image we just built
           kubectl set image deployment/${{ env.SERVICE_NAME }} \
           ${{ env.SERVICE_NAME }}=${{ env.IMAGE_NAME }}:${{ github.sha }} \
           -n crijan-core
 
+          # 3. Wait for the pods to boot up
           kubectl rollout status deployment/${{ env.SERVICE_NAME }} -n crijan-core
