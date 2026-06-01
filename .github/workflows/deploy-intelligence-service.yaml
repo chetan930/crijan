@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   build-and-deploy:
-    name: Build, Push, and Deploy to GKE
+    name: Build, Push, and Deploy to Oracle K3s
     runs-on: ubuntu-latest
 
     steps:
@@ -31,7 +31,6 @@ jobs:
           distribution: "temurin"
           cache: maven
 
-       # ✅ FIX: make ALL mvnw executable FIRST
       - name: Fix mvnw permissions
         run: chmod +x */mvnw
 
@@ -39,29 +38,26 @@ jobs:
         working-directory: ./common-library
         run: ./mvnw clean install -DskipTests
 
-
-      - name: Build and Push Docker Image with Jib
+      # ✅ Added the ARM64 platform flag for Jib
+      - name: Build and Push Docker Image with Jib (ARM64)
         working-directory: ./${{ env.SERVICE_NAME }}
         run: |
           ./mvnw compile jib:build \
+            -Djib.from.platforms=linux/arm64 \
             -Djib.to.image=docker.io/${{ env.IMAGE_NAME }}:${{ github.sha }} \
             -Djib.to.tags=latest \
             -Djib.to.auth.username=${{ secrets.DOCKERHUB_USERNAME }} \
             -Djib.to.auth.password=${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: "${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}"
-          service_account: "${{ secrets.GCP_SERVICE_ACCOUNT }}"
+      # ✅ Replaced GKE Authentication with Oracle K3s Secret
+      - name: Configure Kubernetes Access
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
+          chmod 600 ~/.kube/config
 
-      - name: Get GKE Credentials
-        uses: google-github-actions/get-gke-credentials@v2
-        with:
-          cluster_name: ${{ secrets.GCP_CLUSTER }}
-          location: ${{ secrets.GCP_ZONE }}
-
-      - name: Deploy to GKE
+      # ✅ Deploy directly to your new server
+      - name: Deploy to K3s
         run: |
           kubectl set image deployment/${{ env.SERVICE_NAME }} \
           ${{ env.SERVICE_NAME }}=${{ env.IMAGE_NAME }}:${{ github.sha }} \
