@@ -15,6 +15,9 @@ spec:
       labels:
         app: crijan-me-proxy
     spec:
+      # ✅ ADDED THIS BLOCK TO UNLOCK DOCKER HUB
+      imagePullSecrets:
+        - name: dockerhub-secret
       containers:
         - name: crijan-me-proxy
           image: chetan930/crijan-me-proxy:latest
