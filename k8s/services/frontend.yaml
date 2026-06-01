@@ -13,6 +13,9 @@ spec:
       labels:
         app: crijan-frontend
     spec:
+      # ✅ ADDED THIS BLOCK TO UNLOCK DOCKER HUB
+      imagePullSecrets:
+        - name: dockerhub-secret
       containers:
         - name: crijan-frontend
           image: chetan930/crijan-frontend@sha256:167de8e85fe327ab286277448bc6dd084fc103f7f1b4bca54a369ba46a5ebe2f
