@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - "intelligence-service/**"
+      - ".github/workflows/deploy-account-service.yaml" # (Optional) triggers when the workflow itself changes
+  workflow_dispatch: # <-- THIS ADDS THE MANUAL BUTTON
 
 env:
   SERVICE_NAME: intelligence-service
