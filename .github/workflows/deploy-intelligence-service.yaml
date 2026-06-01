@@ -63,7 +63,7 @@ jobs:
         run: |
           # 1. Apply your base Kubernetes files (creates it if it doesn't exist)
           # IMPORTANT: Update "k8s/" below if your files are in a specific subfolder
-          kubectl apply -f k8s/deploy-intelligence-service.yaml -n crijan-core
+          kubectl apply -f k8s/ -R -n crijan-core
 
           # 2. Inject the brand new Docker image we just built
           kubectl set image deployment/${{ env.SERVICE_NAME }} \
