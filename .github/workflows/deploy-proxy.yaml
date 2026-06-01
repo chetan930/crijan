@@ -1,0 +1,70 @@
+name: Deploy Proxy Service
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "k8s/proxy/**" # Triggers when you change the proxy code
+      - ".github/workflows/deploy-proxy.yaml"
+  workflow_dispatch:
+
+env:
+  SERVICE_NAME: crijan-me-proxy
+  IMAGE_NAME: chetan930/crijan-me-proxy
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    name: Build, Push, and Deploy to Oracle K3s
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5
+
+      # ✅ Login to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # ✅ Set up QEMU and Buildx for ARM64 compiling
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ✅ Build and push the ARM64 Docker image
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./k8s/proxy  # Update this if your proxy Dockerfile is elsewhere
+          platforms: linux/arm64
+          push: true
+          tags: docker.io/${{ env.IMAGE_NAME }}:${{ github.sha }},docker.io/${{ env.IMAGE_NAME }}:latest
+
+      # ✅ Configure K3s Access
+      - name: Configure Kubernetes Access
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      # ✅ Deploy directly to your new server
+      - name: Deploy to K3s
+        run: |
+          # 1. Safely apply ONLY valid YAML files
+          find k8s -type f \( -name "*.yaml" -o -name "*.yml" \) -exec kubectl apply -f {} \;
+
+          # 2. Inject the brand new Docker image we just built
+          kubectl set image deployment/${{ env.SERVICE_NAME }} \
+          ${{ env.SERVICE_NAME }}=${{ env.IMAGE_NAME }}:${{ github.sha }} \
+          -n crijan-core
+
+          # 3. Wait for the pods to boot up
+          kubectl rollout status deployment/${{ env.SERVICE_NAME }} -n crijan-core
