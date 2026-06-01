@@ -61,9 +61,8 @@ jobs:
      # ✅ Deploy directly to your new server
       - name: Deploy to K3s
         run: |
-          # 1. Apply your base Kubernetes files (creates it if it doesn't exist)
-          # IMPORTANT: Update "k8s/" below if your files are in a specific subfolder
-          kubectl apply -f k8s/ -R -n crijan-core
+          # 1. Safely apply ONLY valid YAML files (ignores package.json) and respect file namespaces
+          find k8s -type f \( -name "*.yaml" -o -name "*.yml" \) -exec kubectl apply -f {} \;
 
           # 2. Inject the brand new Docker image we just built
           kubectl set image deployment/${{ env.SERVICE_NAME }} \
