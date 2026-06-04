@@ -22,7 +22,8 @@ metadata:
   name: crijan-shared-config
   namespace: crijan-core
 data:
-  PREVIEW_DOMAIN: "previews.crijan.in"
+  # PREVIEW_DOMAIN: "previews.crijan.in"
+  PREVIEW_DOMAIN: "crijan.in"  # CHANGED: Flattened from previews.crijan.in
   PREVIEW_NAMESPACE: "crijan-previews"
   PROXY_PORT: "80"
   APP_FRONTEND_URL: "https://crijan.in"
