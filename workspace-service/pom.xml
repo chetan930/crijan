@@ -148,6 +148,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-kafka</artifactId>
         </dependency>
+		<dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-httpclient-jdk</artifactId>
+            <version>7.4.0</version>
+        </dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
