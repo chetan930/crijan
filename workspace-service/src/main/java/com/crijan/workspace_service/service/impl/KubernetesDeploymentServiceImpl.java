@@ -40,11 +40,15 @@ public class KubernetesDeploymentServiceImpl implements DeploymentService {
 
     public DeployResponse deploy(Long projectId) {
         // Dynamically build the domain: project-123.app.domain.com
-        String domain = "project-" + projectId + "." + baseDomain;
+        // String domain = "project-" + projectId + "." + baseDomain;
+
+        // FIXED: Flattened structural layout from "project-X.previews.domain" to "project-X-preview.domain"
+        // This validates securely against standard single-level wildcard certificates (*.domain.in)
+        String domain = "project-" + projectId + "-preview." + baseDomain;
 
         // Use default port 80 format logic for clean URLs, or explicit ports for local testing
         String formattedUrl = proxyPort.equals("80")
-                ? "http://" + domain
+                ? "https://" + domain   // Swapped to https protocol for secure execution
                 : "http://" + domain + ":" + proxyPort;
 
         Pod existingPod = findActivePod(projectId);
