@@ -13,4 +13,5 @@ spec:
     - "crijan.in"
     - "www.crijan.in"
     - "api.crijan.in"
-    - "*.previews.crijan.in"
+    - "*.crijan.in"  # CHANGED: Replaced *.previews.crijan.in with global wildcard
+    # - "*.previews.crijan.in"
