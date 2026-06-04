@@ -26,7 +26,8 @@ spec:
         - "crijan.in"
         - "www.crijan.in"
         - "api.crijan.in"
-        - "*.previews.crijan.in"
+        - "*.crijan.in"  # CHANGED: Updated TLS host scope
+        # - "*.previews.crijan.in"
       secretName: crijan-tls-secret
   rules:
     - host: "crijan.in"
@@ -49,7 +50,8 @@ spec:
               service:
                 name: api-gateway
                 port: { number: 80 }
-    - host: "*.previews.crijan.in"
+    # - host: "*.previews.crijan.in"
+    - host: "*.crijan.in"  # CHANGED: Catches all preview subdomains cleanly
       http:
         paths:
           - path: /
