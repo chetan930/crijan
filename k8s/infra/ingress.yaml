@@ -16,9 +16,9 @@ metadata:
     nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization, Content-Type, X-Requested-With, X-Forwarded-For"
 
     # This ensures the backend knows the original request was HTTPS
-    nginx.ingress.kubernetes.io/configuration-snippet: |
-      proxy_set_header X-Forwarded-Proto https;
-      proxy_set_header X-Forwarded-Port 443;
+    # nginx.ingress.kubernetes.io/configuration-snippet: |
+    #   proxy_set_header X-Forwarded-Proto https;
+    #   proxy_set_header X-Forwarded-Port 443;
 spec:
   ingressClassName: "nginx"
   tls:
