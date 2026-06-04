@@ -10,6 +10,7 @@ spec:
       name: letsencrypt-dns-prod-key
     solvers:
       - dns01:
-          cloudDNS:
-            project: project-d117acf1-8e5c-41be-ba1
-            # No JSON key needed! It uses Workload Identity automatically.
+          cloudflare:    # UPDATED: Swapped from cloudDNS to cloudflare
+          apiTokenSecretRef:
+            name: cloudflare-api-token-secret
+            key: api-token
