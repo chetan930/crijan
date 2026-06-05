@@ -76,8 +76,9 @@ public class KubernetesDeploymentServiceImpl implements DeploymentService {
         Pod pod = client.pods().inNamespace(namespace)
                 .withLabel(POOL_LABEL, IDLE)
                 .list().getItems().stream()
+                .filter(p -> "Running".equals(p.getStatus().getPhase())) // 👈 CRITICAL: Never pick up a Pending pod!
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("No idle runners available. Please scale up the runner-pool."));
+                .orElseThrow(() -> new RuntimeException("No active idle runners available. Cluster resources might be full."));
 
         String podName = pod.getMetadata().getName();
         log.info("Claiming pod {} for project {}", podName, projectId);
