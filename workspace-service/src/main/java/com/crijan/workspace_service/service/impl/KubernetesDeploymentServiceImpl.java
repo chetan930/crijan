@@ -73,44 +73,48 @@ public class KubernetesDeploymentServiceImpl implements DeploymentService {
     }
 
     private DeployResponse claimAndStartNewPod(Long projectId, String domain, String formattedUrl) {
-        Pod pod = client.pods().inNamespace(namespace)
-                .withLabel(POOL_LABEL, IDLE)
-                .list().getItems().stream()
-                .filter(p -> "Running".equals(p.getStatus().getPhase())) // 👈 CRITICAL: Never pick up a Pending pod!
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("No active idle runners available. Cluster resources might be full."));
+    Pod pod = client.pods().inNamespace(namespace)
+            .withLabel(POOL_LABEL, IDLE)
+            .list().getItems().stream()
+            .filter(p -> "Running".equals(p.getStatus().getPhase())) // Only pick up healthy, running pods
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("No active idle runners available. Cluster resources might be full."));
 
-        String podName = pod.getMetadata().getName();
-        log.info("Claiming pod {} for project {}", podName, projectId);
+    String podName = pod.getMetadata().getName();
+    log.info("Claiming pod {} for project {}", podName, projectId);
 
-        client.pods().inNamespace(namespace).withName(podName).edit(p -> {
-            p.getMetadata().getLabels().put(POOL_LABEL, BUSY);
-            p.getMetadata().getLabels().put(PROJECT_LABEL, projectId.toString());
-            return p;
-        });
+    client.pods().inNamespace(namespace).withName(podName).edit(p -> {
+        p.getMetadata().getLabels().put(POOL_LABEL, BUSY);
+        p.getMetadata().getLabels().put(PROJECT_LABEL, projectId.toString());
+        return p;
+    });
 
-        try {
-            String initialSyncCmd = String.format("rm -rf /app/* && mc mirror --overwrite myminio/projects/%d/ /app/", projectId);
-            execCommand(podName, "syncer", "sh", "-c", initialSyncCmd);
+    try {
+        // 1. Initial Synchronous Sync (No trailing '&' -> Blocks until files are 100% copied into the pod volume)
+        String initialSyncCmd = String.format("rm -rf /app/* && mc mirror --overwrite myminio/projects/%d /app", projectId);
+        execCommand(podName, "syncer", "sh", "-c", initialSyncCmd);
 
-            String watchCmd = String.format("nohup mc mirror --overwrite --watch myminio/projects/%d/ /app/ > /app/sync.log 2>&1 &", projectId);
-            execCommand(podName, "syncer", "sh", "-c", watchCmd);
+        // 2. Asynchronous Watcher (Ends with '&' -> Java breaks session after 500ms, but nohup shields the background sync)
+        String watchCmd = String.format("nohup mc mirror --overwrite --watch myminio/projects/%d /app > /app/sync.log 2>&1 &", projectId);
+        execCommand(podName, "syncer", "sh", "-c", watchCmd);
 
-            String startCmd = "npm install && nohup npm run dev -- --host 0.0.0.0 --port 5173 > /app/dev.log 2>&1 &";
-            execCommand(podName, "runner", "sh", "-c", startCmd);
+        // 3. 🛠️ CRITICAL FIX: Wrapped the entire build & run pipeline inside a single detached background subshell.
+        // This stops 'npm install' from being terminated mid-flight by SIGHUP when the Java channel closes.
+        String startCmd = "nohup sh -c 'npm install && npm run dev -- --host 0.0.0.0 --port 5173' > /app/dev.log 2>&1 &";
+        execCommand(podName, "runner", "sh", "-c", startCmd);
 
-            Pod updatedPod = client.pods().inNamespace(namespace).withName(podName).get();
-            registerRoute(domain, updatedPod);
+        Pod updatedPod = client.pods().inNamespace(namespace).withName(podName).get();
+        registerRoute(domain, updatedPod);
 
-            log.info("Deployment successful: {}", formattedUrl);
-            return new DeployResponse(formattedUrl);
+        log.info("Deployment successful: {}", formattedUrl);
+        return new DeployResponse(formattedUrl);
 
-        } catch (Exception e) {
-            log.error("Deployment failed for project {}. Releasing pod {}.", projectId, podName, e);
-            client.pods().inNamespace(namespace).withName(podName).delete();
-            throw new RuntimeException("Failed to deploy project " + projectId + ": " + e.getMessage(), e);
-        }
+    } catch (Exception e) {
+        log.error("Deployment failed for project {}. Releasing pod {}.", projectId, podName, e);
+        client.pods().inNamespace(namespace).withName(podName).delete();
+        throw new RuntimeException("Failed to deploy project " + projectId + ": " + e.getMessage(), e);
     }
+}
 
     private void registerRoute(String domain, Pod pod) {
         String podIp = pod.getStatus().getPodIP();
