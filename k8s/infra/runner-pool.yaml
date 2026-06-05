@@ -31,10 +31,10 @@ spec:
             - containerPort: 5173
           resources:
             requests:
-              memory: "512Mi"
-              cpu: "250m"
+              memory: "256Mi"  # 🧠 Lowered reservation from 512Mi
+              cpu: "50m"       # ⚡ Lowered reservation from 250m
             limits:
-              memory: "1Gi"
+              memory: "1Gi"    # 🚀 Keeps full headroom for running builds
               cpu: "500m"
 
         # 2. THE SYNCER (MinIO mc)
@@ -52,7 +52,6 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: MINIO_ROOT_PASSWORD
-            # Constructing the host URL for the internal MinIO service
             - name: MC_HOST_myminio
               value: "http://$(MINIO_USER):$(MINIO_PASS)@minio.crijan-core.svc.cluster.local:9000"
           volumeMounts:
@@ -60,8 +59,8 @@ spec:
               mountPath: /app
           resources:
             requests:
-              memory: "128Mi"
-              cpu: "100m"
+              memory: "64Mi"   # 🧠 Lowered reservation from 128Mi
+              cpu: "20m"       # ⚡ Lowered reservation from 100m
             limits:
               memory: "256Mi"
               cpu: "200m"
