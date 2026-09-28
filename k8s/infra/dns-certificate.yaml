@@ -11,7 +11,7 @@ spec:
   commonName: "crijan.in"
   dnsNames:
     - "crijan.in"
-    - "www.crijan.in"
-    - "api.crijan.in"
+    # - "www.crijan.in"
+    # - "api.crijan.in"
     - "*.crijan.in"  # CHANGED: Replaced *.previews.crijan.in with global wildcard
     # - "*.previews.crijan.in"
